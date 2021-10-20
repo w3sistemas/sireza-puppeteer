@@ -10,7 +10,59 @@ async function startBrowser() {
 }
 
 exports.get = async (req, res, next) => {
-    res.sendFile(path.join(__dirname + '/destination.html'));
+    const docs = [
+        {
+            "id":"1501",
+            "document":"24857599000142"
+        },
+        {
+            "id":"1502",
+            "document":"37120124000110"
+        },
+        {
+            "id":"1503",
+            "document":"45543915000181"
+        },
+        {
+            "id":"1504",
+            "document":"41525322000131"
+        },
+        {
+            "id":"1505",
+            "document":"00360305000104"
+        },
+        {
+            "id":"1506",
+            "document":"13475043000175"
+        },
+        {
+            "id":"1507",
+            "document":"33337122009183"
+        },
+        {
+            "id":"1508",
+            "document":"10456016000167"
+        },
+        {
+            "id":"1509",
+            "document":"24921465002944"
+        },
+        {
+            "id":"1510",
+            "document":"33041260065290"
+        }
+    ];
+
+    for(let index =0;index<docs.length;++index){
+        let tab = docs[index].document;
+    }
+
+    let documents = [];
+    for (a = 0; a < docs.length; a++) {
+        documents.push(docs[a].document);
+    }
+    res.send(documents)
+    //res.sendFile(path.join(__dirname + '/destination.html'));
 }
 
 exports.post = async (req, res, next) => {
