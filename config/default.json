@@ -1,0 +1,21 @@
+{
+  "server": {
+    "port" : 8080
+  },
+  "credentials": {
+    "username": "samuel@sireza.com.br",
+    "password": "feliz@0921"
+  },
+  "salesforce": {
+    "url": "https://experianconsumercommunity.force.com/PartnersBrazil/login",
+    "url_valid_lot": "https://experianconsumercommunity.force.com/PartnersBrazil/s/valida-lote"
+  },
+  "selectors": {
+    "username": "#username",
+    "password": "#password",
+    "login": "#Login",
+    "search": "input[name=\"enter-search\"]",
+    "search_button": "body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-book-integration-brazil-l-w-c > div > div > div.slds-col.slds-size_1-of-4 > article > div.slds-card__body > div:nth-child(3) > button:nth-child(1)",
+    "table": "body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-book-integration-brazil-l-w-c > div > div > div.slds-col.slds-size_3-of-4 > div > div.slds-form-element.slds-border-radius-medium.slds-p-top_medium.slds-p-bottom_medium.slds-p-left_small.slds-p-right_small.slds-border_right.slds-border_bottom.slds-border_top.slds-border_left.ColorBox.slds-m-top_small > lightning-datatable"
+  }
+}
