@@ -1,6 +1,7 @@
 const config = require("config");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
+const path = require("path");
 
 async function startBrowser() {
     const browser = await puppeteer.launch({headless: false});
@@ -9,7 +10,7 @@ async function startBrowser() {
 }
 
 exports.get = async (req, res, next) => {
-    res.send('teste')
+    res.sendFile(path.join(__dirname + '/destination.html'));
 }
 
 exports.post = async (req, res, next) => {
@@ -55,13 +56,13 @@ exports.post = async (req, res, next) => {
     console.log('salvando resultados')
     const bodyHTML = await page.evaluate(() => document.querySelector('*').outerHTML);
 
-    fs.writeFile("destination.html", bodyHTML, function (err) {
+    fs.writeFile(path.join(__dirname + '/destination.html'), bodyHTML, function (err) {
         if (err) {
             return console.log(err);
         }
     });
 
-    await page.goto(`http://localhost/pupeteer/destination.html`);
+    await page.goto(`http://localhost:8080/result`);
 
     const results = await page.evaluate(() => {
         const array = [];
@@ -77,6 +78,12 @@ exports.post = async (req, res, next) => {
         }
         return array;
     },);
+
+    fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
+        if (err) throw err;
+        // if no error, file has been deleted successfully
+        console.log('deletando resultados');
+    });
 
     console.log('fechando browser');
     await browser.close();
