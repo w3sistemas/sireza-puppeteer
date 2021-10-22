@@ -79,9 +79,7 @@ exports.post = async (req, res, next) => {
     },);
 
     for (a = 0; a < results.length; a++) {
-        docs[results[a].document].forEach(rowDoc => {
-            results[a].id = rowDoc.id
-        });
+            results[a].id = docs[results[a].document].id
     }
 
     fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
