@@ -53,12 +53,15 @@ exports.post = async (req, res, next) => {
         console.log('aguardando resultados')
         await page.waitForSelector(config.get('selectors.table'), {timeout: 10000});
 
-        console.log('salvando resultados')
+        console.log('gerando html')
         const bodyHTML = await page.evaluate(() => document.querySelector('*').outerHTML);
 
+        console.log(bodyHTML)
+
+        console.log('salvando html')
         fs.writeFile(path.join(__dirname + '/destination.html'), bodyHTML, function (err) {
             if (err) {
-                return console.log(err);
+                console.log(err);
             }
         });
 
