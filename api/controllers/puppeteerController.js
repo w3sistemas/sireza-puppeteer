@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 async function startBrowser() {
-    const browser = await puppeteer.launch({headless: true});
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
     const page = await browser.newPage();
     return {browser, page};
 }
