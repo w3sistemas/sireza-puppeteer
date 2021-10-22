@@ -81,6 +81,7 @@ exports.post = async (req, res, next) => {
 
         for (a = 0; a < results.length; a++) {
             results[a].id = docs[results[a].document].id
+            results[a].products = results[a].products.split("-");
         }
 
         fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
