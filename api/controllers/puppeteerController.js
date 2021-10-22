@@ -10,59 +10,7 @@ async function startBrowser() {
 }
 
 exports.get = async (req, res, next) => {
-    const docs = [
-        {
-            "id":"1501",
-            "document":"24857599000142"
-        },
-        {
-            "id":"1502",
-            "document":"37120124000110"
-        },
-        {
-            "id":"1503",
-            "document":"45543915000181"
-        },
-        {
-            "id":"1504",
-            "document":"41525322000131"
-        },
-        {
-            "id":"1505",
-            "document":"00360305000104"
-        },
-        {
-            "id":"1506",
-            "document":"13475043000175"
-        },
-        {
-            "id":"1507",
-            "document":"33337122009183"
-        },
-        {
-            "id":"1508",
-            "document":"10456016000167"
-        },
-        {
-            "id":"1509",
-            "document":"24921465002944"
-        },
-        {
-            "id":"1510",
-            "document":"33041260065290"
-        }
-    ];
-
-    for(let index =0;index<docs.length;++index){
-        let tab = docs[index].document;
-    }
-
-    let documents = [];
-    for (a = 0; a < docs.length; a++) {
-        documents.push(docs[a].document);
-    }
-    res.send(documents)
-    //res.sendFile(path.join(__dirname + '/destination.html'));
+    res.sendFile(path.join(__dirname + '/destination.html'));
 }
 
 exports.post = async (req, res, next) => {
@@ -72,11 +20,11 @@ exports.post = async (req, res, next) => {
     await page.goto(config.get('salesforce.url'));
 
     console.log('realizando login');
-    await page.waitForSelector(config.get('selectors.username'), {timeout: 5000});
+    await page.waitForSelector(config.get('selectors.username'), {timeout: 10000});
     await page.click(config.get('selectors.username'));
     await page.keyboard.type(config.get('credentials.username'));
 
-    await page.waitForSelector(config.get('selectors.password'), {timeout: 5000});
+    await page.waitForSelector(config.get('selectors.password'), {timeout: 10000});
     await page.click(config.get('selectors.password'));
     await page.keyboard.type(config.get('credentials.password'));
 
@@ -88,14 +36,13 @@ exports.post = async (req, res, next) => {
     await page.goto(config.get('salesforce.url_valid_lot'));
 
     console.log('iniciando consulta de cnpj');
-    await page.waitForSelector(config.get('selectors.search'), {timeout: 5000});
+    await page.waitForSelector(config.get('selectors.search'), {timeout: 10000});
     await page.click(config.get('selectors.search'));
 
     const docs = req.body;
 
-    for (let index = 0; index < docs.length; ++index) {
-        let tab = docs[index].document;
-        await page.keyboard.type(tab);
+    for (const key of Object.keys(docs)) {
+        await page.keyboard.type(key);
     }
 
     await Promise.all([
@@ -114,7 +61,7 @@ exports.post = async (req, res, next) => {
         }
     });
 
-    await page.goto(`http://localhost:8080/result`);
+    await page.goto(`http://localhost:` + config.get('server.port') + `/result`);
 
     const results = await page.evaluate(() => {
         const array = [];
@@ -131,9 +78,14 @@ exports.post = async (req, res, next) => {
         return array;
     },);
 
+    for (a = 0; a < results.length; a++) {
+        docs[results[a].document].forEach(rowDoc => {
+            results[a].id = rowDoc.id
+        });
+    }
+
     fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
         if (err) throw err;
-        // if no error, file has been deleted successfully
         console.log('deletando resultados');
     });
 
