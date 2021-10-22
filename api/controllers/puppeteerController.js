@@ -9,7 +9,7 @@ async function startBrowser() {
     return {browser, page};
 }
 
-exports.get = async (req, res, next) => {
+exports.get = (req, res, next) => {
     res.sendFile(path.join(__dirname + '/destination.html'));
 }
 
@@ -40,9 +40,9 @@ exports.post = async (req, res, next) => {
         await page.waitForSelector(config.get('selectors.search'), {timeout: 10000});
         await page.click(config.get('selectors.search'));
 
-        const docs = req.body;
+        let docs = req.body;
 
-        for (const key of Object.keys(docs)) {
+        for (let key of Object.keys(docs)) {
             await page.keyboard.type(key);
         }
 
@@ -53,25 +53,23 @@ exports.post = async (req, res, next) => {
         console.log('aguardando resultados')
         await page.waitForSelector(config.get('selectors.table'), {timeout: 10000});
 
-        console.log('gerando html')
-        const bodyHTML = await page.evaluate(() => document.querySelector('*').outerHTML);
-
-        console.log(bodyHTML)
-
         console.log('salvando html')
+        let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
+
         fs.writeFile(path.join(__dirname + '/destination.html'), bodyHTML, function (err) {
             if (err) {
                 console.log(err);
             }
         });
 
+        console.log('acessando html')
         await page.goto(`http://localhost:` + config.get('server.port') + `/result`);
 
         const results = await page.evaluate(() => {
-            const array = [];
-            const tables = document.querySelectorAll('table');
-            for (a = 0; a < tables.length; a++) {
-                for (b = 0; b < tables[a].children[1].childElementCount; b++) {
+            let array = [];
+            let tables = document.querySelectorAll('table');
+            for (let a = 0; a < tables.length; a++) {
+                for (let b = 0; b < tables[a].children[1].childElementCount; b++) {
                     let document = tables[a].children[1].children[b].children[0].children[0].innerText;
                     let message = tables[a].children[1].children[b].children[1].children[0].innerText;
                     let products = tables[a].children[1].children[b].children[2].children[0].innerText;
@@ -82,14 +80,13 @@ exports.post = async (req, res, next) => {
             return array;
         },);
 
-        for (a = 0; a < results.length; a++) {
-            results[a].id = docs[results[a].document].id
-            results[a].products = results[a].products.split("-");
+        for (let i = 0; i < results.length; i++) {
+            results[i].products = results[i].products.split("-");
         }
 
         fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
             if (err) throw err;
-            console.log('deletando resultados');
+            console.log('deletando html');
         });
 
         console.log('fechando browser');
