@@ -9,7 +9,9 @@ exports.get = (req, res, next) => {
 
 exports.post = async (req, res, next) => {
     try {
-        console.log('-------------------------------');
+        let startTime = new Date();
+        console.log('--------------iniciando processo--------------');
+        console.log(startTime);
         console.log('iniciando browser');
         const browser = await puppeteer.launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
@@ -80,15 +82,17 @@ exports.post = async (req, res, next) => {
             results[i].products = results[i].products.split("-");
         }
 
+        console.log('fechando browser');
+        await page.close();
+        await browser.close();
+
         fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
             if (err) throw err;
+            let endTime = new Date();
             console.log('deletando html');
-            console.log('-------------------------------');
+            console.log(endTime);
+            console.log('--------------encerrando processo-------------');
         });
-
-        console.log('fechando browser');
-        //await browser.close();
-        await page.close();
 
         res.send(results);
     }
