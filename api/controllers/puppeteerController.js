@@ -3,12 +3,6 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 
-async function startBrowser() {
-    const browser = await puppeteer.launch({args: ['--no-sandbox']});
-    const page = await browser.newPage();
-    return {browser, page};
-}
-
 exports.get = (req, res, next) => {
     res.sendFile(path.join(__dirname + '/destination.html'));
 }
@@ -16,7 +10,8 @@ exports.get = (req, res, next) => {
 exports.post = async (req, res, next) => {
     try {
         console.log('iniciando browser');
-        const {browser, page} = await startBrowser();
+        const browser = await puppeteer.launch({args: ['--no-sandbox']});
+        const page = await browser.newPage();
 
         await page.goto(config.get('salesforce.url'));
 
@@ -90,7 +85,8 @@ exports.post = async (req, res, next) => {
         });
 
         console.log('fechando browser');
-        await browser.close();
+        //await browser.close();
+        await page.close();
 
         res.send(results);
     }
