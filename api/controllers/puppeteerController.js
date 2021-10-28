@@ -9,6 +9,7 @@ exports.get = (req, res, next) => {
 
 exports.post = async (req, res, next) => {
     try {
+        console.log('-------------------------------');
         console.log('iniciando browser');
         const browser = await puppeteer.launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
@@ -82,6 +83,7 @@ exports.post = async (req, res, next) => {
         fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
             if (err) throw err;
             console.log('deletando html');
+            console.log('-------------------------------');
         });
 
         console.log('fechando browser');
