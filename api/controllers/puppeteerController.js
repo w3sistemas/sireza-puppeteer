@@ -83,8 +83,6 @@ exports.post = async (req, res, next) => {
         }
 
         console.log('fechando browser');
-        await page.close();
-        await browser.close();
 
         fs.unlink(path.join(__dirname + '/destination.html'), function (err) {
             if (err) throw err;
@@ -95,6 +93,9 @@ exports.post = async (req, res, next) => {
         });
 
         res.send(results);
+
+        await page.close();
+        await browser.close();
     }
     catch (e) {
         return false;
