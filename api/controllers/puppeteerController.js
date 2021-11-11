@@ -14,6 +14,7 @@ exports.post = async (req, res, next) => {
         console.log(startTime);
         console.log('iniciando browser');
         const browser = await puppeteer.launch({args: ['--no-sandbox']});
+        //const browser = await puppeteer.launch({headless: false});
         const page = await browser.newPage();
 
         await page.goto(config.get('salesforce.url'));
@@ -40,8 +41,8 @@ exports.post = async (req, res, next) => {
 
         let docs = req.body;
 
-        for (let key of Object.keys(docs)) {
-            await page.keyboard.type(key);
+        for(var attributename in docs){
+            await page.keyboard.type(docs[attributename].documento)
         }
 
         await Promise.all([
