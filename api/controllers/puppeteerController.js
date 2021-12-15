@@ -8,12 +8,14 @@ exports.get = (req, res, next) => {
 }
 
 exports.post = async (req, res, next) => {
+
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+
     try {
         let startTime = new Date();
         console.log('--------------iniciando processo--------------');
         console.log(startTime);
         console.log('iniciando browser');
-        const browser = await puppeteer.launch({args: ['--no-sandbox']});
         const page = await browser.newPage();
 
         await page.goto(config.get('salesforce.url'));
@@ -100,7 +102,6 @@ exports.post = async (req, res, next) => {
     catch (err) {
         console.error('error', err.message);
     } finally {
-        await page.close();
         await browser.close();
     }
 };
