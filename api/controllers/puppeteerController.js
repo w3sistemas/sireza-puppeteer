@@ -51,7 +51,7 @@ exports.post = async (req, res, next) => {
         ]);
 
         console.log('aguardando resultados')
-        await page.waitForSelector(config.get('selectors.table'), {timeout: 10000});
+        await page.waitForSelector(config.get('selectors.table'), {timeout: 20000});
 
         console.log('salvando html')
         let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
