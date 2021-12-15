@@ -14,7 +14,6 @@ exports.post = async (req, res, next) => {
         console.log(startTime);
         console.log('iniciando browser');
         const browser = await puppeteer.launch({args: ['--no-sandbox']});
-        //const browser = await puppeteer.launch({headless: false});
         const page = await browser.newPage();
 
         await page.goto(config.get('salesforce.url'));
