@@ -97,7 +97,10 @@ exports.post = async (req, res, next) => {
         await page.close();
         await browser.close();
     }
-    catch (e) {
-        return false;
+    catch (err) {
+        console.error('error', err.message);
+    } finally {
+        await page.close();
+        await browser.close();
     }
 };
