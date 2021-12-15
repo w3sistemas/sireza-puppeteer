@@ -42,8 +42,6 @@ exports.post = async (req, res, next) => {
 
         let docs = req.body;
 
-        console.log(docs)
-
         for(var attributename in docs){
             await page.keyboard.type(docs[attributename].documento)
         }
