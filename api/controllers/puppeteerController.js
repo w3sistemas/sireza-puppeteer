@@ -140,9 +140,15 @@ exports.validateAlone = (async function (req) {
 
         //let docs = req.body;
 
-        //for(let attributeName in docs){
-        //await page.keyboard.type(docs[attributeName].documento);
-        await page.keyboard.type('06246744000177');
+        let docs = {
+            'documento': '37120124000110',
+            'documento': '06246744000177'
+        }
+
+        for(let attributeName in docs) {
+            await page.keyboard.type(docs[attributeName].documento);
+            //await page.keyboard.type('06246744000177');
+        }
 
         await Promise.all([
             await page.keyboard.press('Enter'),
