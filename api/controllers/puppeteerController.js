@@ -3,13 +3,12 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 
-exports.get = (req, res, next) => {
-    res.sendFile(path.join(__dirname + '/destination.html'));
-}
+exports.page = (async function (req, res) {
+    res.sendFile(path.join(__dirname + '/37120124000110.html'));
+});
 
-exports.post = async (req, res, next) => {
-
-    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+exports.validateLot = (async function (req) {
+    const browser = await puppeteer.launch({ headless: false });
 
     try {
         let startTime = new Date();
@@ -104,4 +103,120 @@ exports.post = async (req, res, next) => {
     } finally {
         await browser.close();
     }
-};
+});
+
+exports.validateAlone = (async function (req) {
+    //const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({ headless: false });
+
+    try {
+        let startTime = new Date();
+        console.log('--------------iniciando processo--------------');
+        console.log(startTime);
+        console.log('iniciando browser');
+        const page = await browser.newPage();
+
+        await page.goto(config.get('salesforce.url'));
+
+        console.log('realizando login');
+        await page.waitForSelector(config.get('selectors.username'), {timeout: 10000});
+        await page.click(config.get('selectors.username'));
+        await page.keyboard.type(config.get('credentials.username'));
+
+        await page.waitForSelector(config.get('selectors.password'), {timeout: 10000});
+        await page.click(config.get('selectors.password'));
+        await page.keyboard.type(config.get('credentials.password'));
+
+        console.log('acessando pagina home');
+        await page.click(config.get('selectors.login'));
+        await page.waitForNavigation();
+
+        console.log('acessando validacao');
+        await page.goto(config.get('salesforce.url_valid_alone'));
+
+        console.log('iniciando consulta de cnpj');
+        await page.waitForSelector(config.get('selectors.search'), {timeout: 10000});
+        await page.click(config.get('selectors.search'));
+
+        //let docs = req.body;
+
+        //for(let attributeName in docs){
+        //await page.keyboard.type(docs[attributeName].documento);
+        await page.keyboard.type('06246744000177');
+
+        await Promise.all([
+            await page.keyboard.press('Enter'),
+        ]);
+
+        console.log('aguardando resultados');
+
+        try {
+            await page.waitForSelector(config.get('selectors.result_alone_true'), {timeout:10000})
+
+            console.log('salvando html')
+
+            let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
+
+            /*fs.writeFile(path.join(__dirname + '/'+docs[attributeName].documento+'.html'), bodyHTML, function (err) {
+                if (err) {
+                    console.log(err);
+                }
+            });*/
+
+            fs.writeFile(path.join(__dirname + '/06246744000177.html'), bodyHTML, function (err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+
+            console.log('acessando html')
+
+            await page.goto(`http://localhost:` + config.get('server.port') + `/page`);
+
+            let message = await page.evaluate(() => document.querySelector('body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-integration-brazil-l-w-c > div > lightning-layout > slot > div > lightning-layout-item.cnpjframe.slds-col.slds-size_12-of-12.slds-large-size_4-of-12 > slot > div:nth-child(2) > lightning-card > article > div.slds-card__body > slot > div > div > div > p').innerHTML);
+
+            const hrefs = await page.evaluate(
+                () => Array.from(
+                    document.querySelectorAll('.slds-tile__title.slds-truncate'),
+                    a => a.getAttribute('title')
+                )
+            );
+
+            let array = [];
+            for (let a = 0; a < hrefs.length; a++) {
+                array['document'] = '06246744000177';
+                array['message'] = message;
+                array['products'] = hrefs;
+            }
+
+            console.log(array);
+
+            await page.click('[name="NewForm"]')
+
+        }
+        catch(err) {
+            await page.waitForSelector(config.get('selectors.result_alone_false'), {timeout:10000})
+            await page.click('[name="NewForm"]')
+        }
+
+        console.log('fechando browser');
+
+        fs.unlink(path.join(__dirname + '/06246744000177.html'), function (err) {
+            if (err) throw err;
+            let endTime = new Date();
+            console.log('deletando html');
+            console.log(endTime);
+            console.log('--------------encerrando processo-------------');
+        });
+
+        //res.send(results);
+
+        await page.close();
+        await browser.close();
+    }
+    catch (err) {
+        console.error('error', err.message);
+    } finally {
+        await browser.close();
+    }
+});
