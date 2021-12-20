@@ -211,8 +211,6 @@ exports.validateAlone = (async function (req, res) {
             }
         }
 
-        console.log(array)
-
         res.send(array);
     }
     catch (err) {
