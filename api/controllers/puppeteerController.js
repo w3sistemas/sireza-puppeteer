@@ -4,11 +4,12 @@ const fs = require("fs");
 const path = require("path");
 
 exports.page = (async function (req, res) {
-    res.sendFile(path.join(__dirname + '/37120124000110.html'));
+    res.sendFile(path.join(__dirname + '/document.html'));
 });
 
-exports.validateLot = (async function (req) {
-    const browser = await puppeteer.launch({ headless: false });
+exports.validateLot = (async function (req, res) {
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    //const browser = await puppeteer.launch({ headless: false });
 
     try {
         let startTime = new Date();
@@ -62,7 +63,7 @@ exports.validateLot = (async function (req) {
         });
 
         console.log('acessando html')
-        await page.goto(`http://localhost:` + config.get('server.port') + `/result`);
+        await page.goto(`http://localhost:` + config.get('server.port') + `/page/?r=destination`);
 
         const results = await page.evaluate(() => {
             let array = [];
@@ -105,9 +106,9 @@ exports.validateLot = (async function (req) {
     }
 });
 
-exports.validateAlone = (async function (req) {
-    //const browser = await puppeteer.launch({args: ['--no-sandbox']});
-    const browser = await puppeteer.launch({ headless: false });
+exports.validateAlone = (async function (req, res) {
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    //const browser = await puppeteer.launch({ headless: false });
 
     try {
         let startTime = new Date();
@@ -138,87 +139,81 @@ exports.validateAlone = (async function (req) {
         await page.waitForSelector(config.get('selectors.search'), {timeout: 10000});
         await page.click(config.get('selectors.search'));
 
-        //let docs = req.body;
+        let docs = req.body;
 
-        let docs = {
-            'documento': '37120124000110',
-            'documento': '06246744000177'
-        }
+        let array = [];
 
         for(let attributeName in docs) {
-            await page.keyboard.type(docs[attributeName].documento);
-            //await page.keyboard.type('06246744000177');
-        }
+            try {
 
-        await Promise.all([
-            await page.keyboard.press('Enter'),
-        ]);
+                await page.keyboard.type(docs[attributeName].documento);
 
-        console.log('aguardando resultados');
+                await Promise.all([
+                    await page.keyboard.press('Enter')
+                ]);
 
-        try {
-            await page.waitForSelector(config.get('selectors.result_alone_true'), {timeout:10000})
+                console.log('aguardando resultados');
 
-            console.log('salvando html')
+                await page.waitForSelector(config.get('selectors.result_alone_true'), {timeout:10000})
 
-            let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
+                console.log('salvando html')
 
-            /*fs.writeFile(path.join(__dirname + '/'+docs[attributeName].documento+'.html'), bodyHTML, function (err) {
-                if (err) {
-                    console.log(err);
-                }
-            });*/
+                let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
 
-            fs.writeFile(path.join(__dirname + '/06246744000177.html'), bodyHTML, function (err) {
-                if (err) {
-                    console.log(err);
-                }
-            });
+                fs.writeFile(path.join(__dirname + '/document.html'), bodyHTML, function (err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
 
-            console.log('acessando html')
+                console.log('acessando html')
 
-            await page.goto(`http://localhost:` + config.get('server.port') + `/page`);
+                const pageHtml = await browser.newPage()
 
-            let message = await page.evaluate(() => document.querySelector('body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-integration-brazil-l-w-c > div > lightning-layout > slot > div > lightning-layout-item.cnpjframe.slds-col.slds-size_12-of-12.slds-large-size_4-of-12 > slot > div:nth-child(2) > lightning-card > article > div.slds-card__body > slot > div > div > div > p').innerHTML);
+                await pageHtml.goto(`http://localhost:` + config.get('server.port') + `/page`);
 
-            const hrefs = await page.evaluate(
-                () => Array.from(
-                    document.querySelectorAll('.slds-tile__title.slds-truncate'),
-                    a => a.getAttribute('title')
-                )
-            );
+                let textMessage = await pageHtml.evaluate(() => document.querySelector('body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-integration-brazil-l-w-c > div > lightning-layout > slot > div > lightning-layout-item.cnpjframe.slds-col.slds-size_12-of-12.slds-large-size_4-of-12 > slot > div:nth-child(2) > lightning-card > article > div.slds-card__body > slot > div > div > div > p').innerHTML);
 
-            let array = [];
-            for (let a = 0; a < hrefs.length; a++) {
-                array['document'] = '06246744000177';
-                array['message'] = message;
-                array['products'] = hrefs;
+                const hrefs = await pageHtml.evaluate(
+                    () => Array.from(
+                        document.querySelectorAll('.slds-tile__title.slds-truncate'),
+                        a => a.getAttribute('title')
+                    )
+                );
+
+                let document = docs[attributeName].documento;
+                let message = textMessage;
+                let products = hrefs;
+                let event = {document, message, products};
+                array.push(event);
+
+                fs.unlink(path.join(__dirname + '/document.html'), function (err) {
+                    if (err) throw err;
+                    let endTime = new Date();
+                    console.log('deletando html');
+                    console.log(endTime);
+                    console.log('--------------encerrando processo-------------');
+                });
+
+                await pageHtml.close();
+
+                await page.click('[name="NewForm"]')
+
             }
+            catch(err) {
+                let document = docs[attributeName].documento;
+                let message = 'CNPJ NÃO ESTÁ VÁLIDO PARA NEGOCIAÇÃO';
+                let products = [];
+                let event = {document, message, products};
+                array.push(event);
 
-            console.log(array);
-
-            await page.click('[name="NewForm"]')
-
+                await page.click('[name="NewForm"]')
+            }
         }
-        catch(err) {
-            await page.waitForSelector(config.get('selectors.result_alone_false'), {timeout:10000})
-            await page.click('[name="NewForm"]')
-        }
 
-        console.log('fechando browser');
+        console.log(array)
 
-        fs.unlink(path.join(__dirname + '/06246744000177.html'), function (err) {
-            if (err) throw err;
-            let endTime = new Date();
-            console.log('deletando html');
-            console.log(endTime);
-            console.log('--------------encerrando processo-------------');
-        });
-
-        //res.send(results);
-
-        await page.close();
-        await browser.close();
+        res.send(array);
     }
     catch (err) {
         console.error('error', err.message);
