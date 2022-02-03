@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 exports.page = (async function (req, res) {
-    res.sendFile(path.join(__dirname + '/document.html'));
+    res.sendFile(path.join(__dirname + '/destination.html'));
 });
 
 exports.validateLot = (async function (req, res) {
@@ -107,8 +107,8 @@ exports.validateLot = (async function (req, res) {
 });
 
 exports.validateAlone = (async function (req, res) {
-    const browser = await puppeteer.launch({args: ['--no-sandbox']});
-    //const browser = await puppeteer.launch({ headless: false });
+    //const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({ headless: false });
 
     try {
         let startTime = new Date();
@@ -135,7 +135,6 @@ exports.validateAlone = (async function (req, res) {
         console.log('acessando validacao');
         await page.goto(config.get('salesforce.url_valid_alone'));
 
-        console.log('iniciando consulta de cnpj');
         await page.waitForSelector(config.get('selectors.search'), {timeout: 10000});
         await page.click(config.get('selectors.search'));
 
@@ -144,72 +143,71 @@ exports.validateAlone = (async function (req, res) {
         let array = [];
 
         for(let attributeName in docs) {
+
             try {
+
+                console.log('******** iniciando consulta de cnpj [ '+ docs[attributeName].documento +' ] ********');
 
                 await page.keyboard.type(docs[attributeName].documento);
 
                 await Promise.all([
                     await page.keyboard.press('Enter')
                 ]);
-
                 console.log('aguardando resultados');
 
-                await page.waitForSelector(config.get('selectors.result_alone_true'), {timeout:10000})
+                await page.waitForSelector(config.get('selectors.result_alone_true'), {timeout:5000})
 
-                console.log('salvando html')
+                    console.log('salvando html')
 
-                let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
+                    let bodyHTML = await page.evaluate(() => document.querySelector('*').innerHTML);
 
-                fs.writeFile(path.join(__dirname + '/document.html'), bodyHTML, function (err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
+                    fs.writeFile(path.join(__dirname + '/document.html'), bodyHTML, function (err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
 
-                console.log('acessando html')
+                    console.log('acessando html')
 
-                const pageHtml = await browser.newPage()
+                    const pageHtml = await browser.newPage()
 
-                await pageHtml.goto(`http://localhost:` + config.get('server.port') + `/page`);
+                    await pageHtml.goto(`http://localhost:` + config.get('server.port') + `/page`);
 
-                let textMessage = await pageHtml.evaluate(() => document.querySelector('body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-integration-brazil-l-w-c > div > lightning-layout > slot > div > lightning-layout-item.cnpjframe.slds-col.slds-size_12-of-12.slds-large-size_4-of-12 > slot > div:nth-child(2) > lightning-card > article > div.slds-card__body > slot > div > div > div > p').innerHTML);
+                    let textMessage = await pageHtml.evaluate(() => document.querySelector('body > div.themeLayoutStarterWrapper.isHeroUnderHeader-false.isHeaderPinned-false.siteforceThemeLayoutStarter > div.body.isPageWidthFixed-true > div > div.slds-col--padded.contentRegion.comm-layout-column > div > div > c-e-x-p_-valida-integration-brazil-l-w-c > div > lightning-layout > slot > div > lightning-layout-item.cnpjframe.slds-col.slds-size_12-of-12.slds-large-size_4-of-12 > slot > div:nth-child(2) > lightning-card > article > div.slds-card__body > slot > div > div > div > p').innerHTML);
 
-                const hrefs = await pageHtml.evaluate(
-                    () => Array.from(
-                        document.querySelectorAll('.slds-tile__title.slds-truncate'),
-                        a => a.getAttribute('title')
-                    )
-                );
+                    const hrefs = await pageHtml.evaluate(
+                        () => Array.from(
+                            document.querySelectorAll('.slds-tile__title.slds-truncate'),
+                            a => a.getAttribute('title')
+                        )
+                    );
 
-                let document = docs[attributeName].documento;
-                let message = textMessage;
-                let products = hrefs;
-                let event = {document, message, products};
-                array.push(event);
+                    let document = docs[attributeName].documento;
+                    let message = textMessage;
+                    let products = hrefs;
+                    let event = {document, message, products};
+                    array.push(event);
 
-                fs.unlink(path.join(__dirname + '/document.html'), function (err) {
-                    if (err) throw err;
-                    let endTime = new Date();
-                    console.log('deletando html');
-                    console.log(endTime);
-                    console.log('--------------encerrando processo-------------');
-                });
+                    fs.unlink(path.join(__dirname + '/document.html'), function (err) {
+                        if (err) throw err;
+                        console.log('deletando html');
+                    });
 
-                await pageHtml.close();
+                    await pageHtml.close();
 
-                await page.click('[name="NewForm"]')
+                    await page.click('[name="NewForm"]')
 
             }
             catch(err) {
-                let document = docs[attributeName].documento;
-                let message = 'CNPJ NÃO ESTÁ VÁLIDO PARA NEGOCIAÇÃO';
-                let products = [];
-                let event = {document, message, products};
-                array.push(event);
-
                 await page.click('[name="NewForm"]')
             }
+
+            console.log('******** encerrando consulta de cnpj [ '+ docs[attributeName].documento +' ] ********');
         }
+
+        let endTime = new Date();
+        console.log(endTime);
+        console.log('--------------encerrando processo-------------');
 
         res.send(array);
     }
